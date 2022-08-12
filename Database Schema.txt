@@ -1,0 +1,35 @@
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~ Loan Table ~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+loan_id TINYINT UNSIGNED AUTO_INCREMENT -> PRIMARY KEY
+name VARCHAR(50) NOT NULL
+duration_in_years ENUM(5, 10) NOT NULL
+start_date DATE NOT NULL
+projected_payoff DATE NOT NULL
+due_day ENUM(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31) NOT NULL
+descript VARCHAR(100) DEFAULT "A loan that needs to be paid off"
+principle FLOAT NOT NULL
+monthly_payment_amount FLOAT NOT NULL
+
+* NOTE: the time datatype goes YYYY-MM-DD
+
+Ex. Insert:
+INSERT INTO loan 
+    (name, duration_in_years, start_date, projected_payoff, due_day, descript, principle, monthly_payment_amount)
+    VALUES ("Student Loans", "15", "2021-11-10", "2036-11-10", "19", "Firstmark", 108404.7, 1202.75)
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~ Loan Payments Table ~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+payment_id INT UNSIGNED AUTO_INCREMENT -> PRIMARY KEY
+loan_id TINYINT UNSIGNED NOT NULL -> FOREIGN KEY
+payment_date DATE DEFAULT (current_date)
+amount_paid FLOAT NOT NULL
+tracking_number VARCHAR(50) NOT NULL
+
+Ex. Insert:
+INSERT INTO loan_payment
+    (loan_id, amount_paid, tracking_number)
+    VALUES (SELECT loan_id FROM loan WHERE name = "Student Loans" loan_id, 1300.00, 92208891)
