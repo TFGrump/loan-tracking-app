@@ -3,7 +3,7 @@ import mysql.connector
 
 class SQLConnection:
     def __init__(self):
-        self.cnx = mysql.connector.connect(user="TJ", password="Rub!kSCub3SQL", database="loan_tracker", host="127.0.0.1")
+        self.cnx = mysql.connector.connect()
         self.cursor = self.cnx.cursor()
 
     # HELPERS
