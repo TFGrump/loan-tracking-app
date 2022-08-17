@@ -29,7 +29,12 @@ payment_date DATE DEFAULT (current_date)
 amount_paid FLOAT NOT NULL
 tracking_number VARCHAR(50) NOT NULL
 
-Ex. Insert:
+Ex. Insert 1:
 INSERT INTO loan_payment
     (loan_id, amount_paid, tracking_number)
-    VALUES (SELECT loan_id FROM loan WHERE name = "Student Loans" loan_id, 1300.00, 92208891)
+    VALUES ((SELECT loan_id FROM loan WHERE name = "Student Loans"), 1300.00, 92208891)
+
+Ex. Insert 2:
+INSERT INTO loan_payment
+    (loan_id, amount_paid)
+    VALUES ((SELECT loan_id FROM loan WHERE name = "Student Loans"), 1300.00)
