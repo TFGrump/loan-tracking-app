@@ -20,9 +20,32 @@ class SQLConnection:
         keys = ""
         values = ""
         for (key, value) in dictionary.items():
-            keys = f"{keys}, {key}"
-            values = f"{values}, {value}"
+            keys = f"{key}, {keys}"
+            values = f"{value}, {values}"
         return keys.strip(', '), values.strip(', ')
+
+    def __format_sets__(self, dictionary: dict) -> str:
+        # Used to format the SETs in the UPDATE statement
+        set_str = ""
+        for (key, value) in dictionary.items():
+            set_str = f"{key} = {value}, {set_str}"
+        return set_str.strip(', ')
+
+    def __does_expense_exist__(self, name: str):
+        # Checks to see if the expense already exists in the database
+        does_exist = 0
+        command = f"SELECT 1 FROM static_expenses WHERE name = {name}"
+        self.cursor.execute(command)
+        if self.cursor.fetchone() is not None:
+            does_exist = 1
+        return does_exist
+
+    def __get_id__(self, table: str, name: str) -> int:
+        # Gets the ID of name from table
+        command = f"SELECT {table}_id FROM {table} WHERE name = {name}"
+        self.cursor.execute(command)
+        (result,) = self.cursor.fetchone()
+        return result
 
     # GETTERS
     def get_loans(self) -> [str]:
@@ -38,7 +61,7 @@ class SQLConnection:
     def get_loan_information(self, loan: str) -> [dict]:
         # Gets all the information about a specific loan
         columns = "duration_in_years, start_date, projected_payoff, due_day, descript, principle, monthly_payment_amount," \
-                  f"(SELECT count(*) FROM loan_payments GROUP BY loan_id HAVING loan_id = (SELECT loan_id FROM loan WHERE name = {loan})) payments"
+                  f"(SELECT count(*) FROM payment GROUP BY loan_id HAVING loan_id = (SELECT loan_id FROM loan WHERE name = {loan})) payments"
         command = f"SELECT {columns} FROM loan WHERE name = {loan}"
         self.cursor.execute(command)
         result = self.cursor.fetchone()
@@ -46,20 +69,16 @@ class SQLConnection:
                 "Due Day": result[3], "Description": result[4], "Principle": result[5],
                 "Monthly Payment Amount": result[6], "Payments Made": result[7]}
 
-    def __get_expense__(self, name: str):
-        does_exist = 0
-        command = f"SELECT 1 FROM static_expenses WHERE name = {name}"
-        self.cursor.execute(command)
-        if self.cursor.fetchone() is not None:
-            does_exist = 1
-        return does_exist
-
-    def get_expenses(self) -> [dict]:
+    def get_expenses(self) -> [(str, float)]:
         # Gets all the active expenses
         # This includes all the expenses from the static_expense table and the active loans in the loan table
-        command = "SELECT name, amount FROM static_expenses " \
+        command = "WITH individual_expenses AS " \
+                  "(SELECT name, amount FROM expense " \
+                  " UNION " \
+                  " SELECT name, monthly_payment_amount FROM loan WHERE active = 1) " \
+                  "SELECT name, amount FROM individual_expenses " \
                   "UNION " \
-                  "SELECT name, monthly_payment_amount FROM loan WHERE active = 1"
+                  "SELECT \"Total Expenses\" name, sum(amount) amount FROM individual_expenses"
         self.cursor.execute(command)
         return self.cursor.fetchall()
 
@@ -79,11 +98,11 @@ class SQLConnection:
 
     def add_expense(self, expense_info: dict):
         # Adds an expense to the database
-        if self.__get_expense__(expense_info["name"]):
+        if self.__does_expense_exist__(expense_info["name"]):
             raise AlreadyExistsError(f"{expense_info['name']} is already a known expense\nTry updating it instead.")
 
         columns, values = self.__dict_to_strs__(expense_info)
-        command = f'INSERT INTO static_expenses ({columns}) VALUES ({values})'
+        command = f'INSERT INTO expense ({columns}) VALUES ({values})'
         try:
             self.cursor.execute(command)
             self.cnx.commit()
@@ -93,7 +112,7 @@ class SQLConnection:
     def make_payment(self, payment_info: dict):
         # Adds a payment for a specific loan to the database
         columns, values = self.__dict_to_strs__(payment_info)
-        command = f'INSERT INTO loan_payments ({columns}) VALUES ({values})'
+        command = f'INSERT INTO payment ({columns}) VALUES ({values})'
         try:
             self.cursor.execute(command)
             self.cnx.commit()
@@ -103,20 +122,21 @@ class SQLConnection:
 
     def update_loan_info(self, loan: str, loan_info: dict):
         # Updates the information of a specific loan in the database
-        # TODO: add UPDATE statement so that the user can update loan information
-        pass
+        command = "UPDATE loan " \
+                  f"SET {self.__format_sets__(loan_info)} " \
+                  f"WHERE loan_id = {self.__get_id__('loan', loan)}"
+        self.cursor.execute(command)
+        self.cnx.commit()
+
+    def update_expense_info(self, expense: str, expense_info: dict):
+        # Updates the information of a specific expense in the database
+        command = "UPDATE expense " \
+                  f"SET {self.__format_sets__(expense_info)} " \
+                  f"WHERE expense_id = {self.__get_id__('static_expenses', expense)}"
+        self.cursor.execute(command)
+        self.cnx.commit()
 
     def close(self):
         # releases the memory for the cursor and the connection to the database
         self.cursor.close()
         self.cnx.close()
-
-
-cnx = SQLConnection()
-expense = {"name": "\"Car Insurance\"", "amount": "294.22"}
-try:
-    cnx.add_expense(expense)
-except AlreadyExistsError as err:
-    print(err)
-print(cnx.get_expenses())
-cnx.close()
