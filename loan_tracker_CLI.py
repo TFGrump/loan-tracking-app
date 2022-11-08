@@ -1,52 +1,51 @@
+from argparse import ArgumentParser
+
 import loan_tracker_api as lt
 import mysql.connector
 
-
-def __verify_input__(user_input: str) -> bool:
-    pass
-
-
-def __format_dict__(dictionary: dict) -> str:
-    dictionary_str = ""
-    for (column, value) in dictionary.items():
-        dictionary_str += f'{column}: {value}\n'
-    return dictionary_str
-
-
-def __format_payments__(payments: dict, show_total_payments=False) -> str:
-    dictionary_str = '------- Payments -------\n'
-    if show_total_payments:
-        dictionary_str += f'You have made {len(payments)} payments\n\n'
-    for (payment_id, payment) in payments.items():
-        dictionary_str += __format_dict__(payment)
-    return dictionary_str + '------------------------\n'
-
-
-def __loan_menu__(loans: dict, prompt: str) -> str:
-    menu_str = f'--------- Loans --------\n{prompt}'
-    for (loan_id, loan) in loans.items():
-        menu_str += f'\n{loan_id}. {loan}'
-    menu_str += '\n0. Back\n------------------------\n'
+def _edit_menu(expense: dict) -> str:
+    menu_str = f'--------- Edit ---------\n' \
+               f'Select the values you wish to edit\nSeparate by commas (,)\n'
+    menu_str += _format_dict(expense)
+    menu_str += '0. Back\n------------------------\n'
     return menu_str
 
-
-def __expense_menu__(expenses: dict, prompt: str) -> str:
+def _expense_menu(expenses: dict, prompt: str) -> str:
     menu_str = f'------- Expenses -------\n{prompt}'
     for (expense_id, expense) in expenses.items():
         menu_str += f'\n{expense_id}. {expense}'
     menu_str += '\n0. Back\n------------------------\n'
     return menu_str
 
+def _format_dict(dictionary: dict) -> str:
+    dictionary_str = ""
+    for (column, value) in dictionary.items():
+        dictionary_str += f'{column}: {value}\n'
+    return dictionary_str
 
-def __edit_menu__(expense: dict) -> str:
-    menu_str = f'--------- Edit ---------\n' \
-               f'Select the values you wish to edit\nSeparate by commas (,)\n'
-    menu_str += __format_dict__(expense)
-    menu_str += '0. Back\n------------------------\n'
+def _format_payments(payments: dict, show_total_payments=False) -> str:
+    dictionary_str = '------- Payments -------\n'
+    if show_total_payments:
+        dictionary_str += f'You have made {len(payments)} payments\n\n'
+    for (payment_id, payment) in payments.items():
+        dictionary_str += _format_dict(payment)
+    return dictionary_str + '------------------------\n'
+
+def _loan_menu(loans: dict, prompt: str) -> str:
+    menu_str = f'--------- Loans --------\n{prompt}'
+    for (loan_id, loan) in loans.items():
+        menu_str += f'\n{loan_id}. {loan}'
+    menu_str += '\n0. Back\n------------------------\n'
     return menu_str
 
+def _parse_args() -> dict:
+    parser = ArgumentParser()
+    parser.add_argument("-u", "--user", type=str, required=True, help="The username for the sql connector")
+    parser.add_argument("-p", "--password", type=str, required=True, help="The password for the sql connector")
+    args = parser.parse_args()
+    return args
 
-def __verify__(dictionary: dict) -> int:
+def _verify(dictionary: dict) -> int:
     # Will prompt the user to the information is correct
     # Returns a 1 if True and 0 if False
     if len(dictionary) == 0:
@@ -62,11 +61,13 @@ def __verify__(dictionary: dict) -> int:
         else:
             return 0
 
+def _verify_input(user_input: str) -> bool:
+    pass
 
 def view_loans(cnx: lt.SQLConnection):
     while True:
         loans = cnx.get_loans()
-        user_input = input(__loan_menu__(loans, 'Select a loan that you want to view'))
+        user_input = input(_loan_menu(loans, 'Select a loan that you want to view'))
 
         if user_input == '0':
             break
@@ -74,15 +75,14 @@ def view_loans(cnx: lt.SQLConnection):
             continue
         else:
             try:
-                print(__format_dict__(cnx.get_loan_information(user_input)))
+                print(_format_dict(cnx.get_loan_information(user_input)))
             except TypeError:
                 print('That loan is not in the database')
-
 
 def view_expenses(cnx: lt.SQLConnection):
     while True:
         expenses = cnx.get_expenses()
-        user_input = input(__expense_menu__(expenses, 'Select the expense you wish to view'))
+        user_input = input(_expense_menu(expenses, 'Select the expense you wish to view'))
 
         if user_input == '0':
             break
@@ -90,46 +90,43 @@ def view_expenses(cnx: lt.SQLConnection):
             continue
         else:
             try:
-                print(__format_dict__(cnx.get_expense_information(user_input)))
+                print(_format_dict(cnx.get_expense_information(user_input)))
             except TypeError:
                 print('That expense is not in the database')
-
 
 def view_payments(cnx: lt.SQLConnection):
     while True:
         loans = cnx.get_loans()
         loans['-1'] = 'All'
-        user_input = input(__loan_menu__(loans, 'Select the loan that you want to see the payments of:'))
+        user_input = input(_loan_menu(loans, 'Select the loan that you want to see the payments of:'))
 
         if user_input == '0':
             break
         elif user_input == '-1':
-            print(__format_payments__(cnx.get_payments()))
+            print(_format_payments(cnx.get_payments()))
         elif user_input == "":
             continue
         else:
             try:
-                print(__format_payments__(cnx.get_payments(user_input), True))
+                print(_format_payments(cnx.get_payments(user_input), True))
             except TypeError:
                 print('That Loan is not in the database')
-
 
 def edit_expense(cnx: lt.SQLConnection):
     while True:
         expenses = cnx.get_expenses()
-        user_input = input(__expense_menu__(expenses, "Select the expense you wish to edit"))
+        user_input = input(_expense_menu(expenses, "Select the expense you wish to edit"))
 
         if user_input == '0':
             break
         else:
             while True:
-                user_input = input(__edit_menu__(cnx.get_expense_information(user_input)))
+                user_input = input(_edit_menu(cnx.get_expense_information(user_input)))
 
                 if user_input == '0':
                     break
                 else:
                     print(user_input)
-
 
 def display_expenses(cnx: lt.SQLConnection):
     expenses = cnx.display_expenses()
@@ -138,7 +135,6 @@ def display_expenses(cnx: lt.SQLConnection):
         output_str += f'\n{name}: {amount:.2f}'
     output_str += '\n------------------------\n'
     print(output_str)
-
 
 def display_unpaid_loans(cnx: lt.SQLConnection):
     loans = cnx.get_unpaid_loans().items()
@@ -150,12 +146,11 @@ def display_unpaid_loans(cnx: lt.SQLConnection):
             out_str += f'{loan} still needs to be paid by the {day}\n'
     print(out_str)
 
-
 def make_payment(cnx: lt.SQLConnection):
     while True:
         loans = cnx.get_loans()
         print("You will be able to verify the payment information after you have entered everything.")
-        loan = input(__loan_menu__(loans, 'What loan do you want to make a payment for?'))
+        loan = input(_loan_menu(loans, 'What loan do you want to make a payment for?'))
 
         if loan == '0':
             break
@@ -173,11 +168,10 @@ def make_payment(cnx: lt.SQLConnection):
                 if tracking != "":
                     payment_information["tracking_number"] = tracking
 
-                if __verify__(payment_information):
+                if _verify(payment_information):
                     cnx.make_payment(payment_information)
                     print('PAYMENT ADDED\n')
                     break
-
 
 def main(cnx: lt.SQLConnection):
     while True:
@@ -212,9 +206,9 @@ def main(cnx: lt.SQLConnection):
         else:
             print('Not a valid input\n')
 
-
 try:
-    connection = lt.SQLConnection("TJ", "Rub!kSCub3SQL")
+    args = _parse_args()
+    connection = lt.SQLConnection(args.user, args.password)
     main(connection)
 except mysql.connector.errors.ProgrammingError as err:
     print('Invalid Credentials')
