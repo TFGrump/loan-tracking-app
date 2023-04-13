@@ -13,8 +13,10 @@ class SQLConnection:
         self.cursor = self.cnx.cursor()
 
     # HELPERS
-    def _dict_to_strs(self, dictionary: dict) -> (str, str):
-        # Used to format the COLUMNS and the VALUES for INSERT queries
+    def _dict_to_strs(self, dictionary: dict) -> tuple[str, str]:
+        """Used to format the COLUMNS and the VALUES for INSERT queries.
+        """
+
         keys = ""
         values = ""
         for (key, value) in dictionary.items():
@@ -23,14 +25,18 @@ class SQLConnection:
         return keys.strip(', '), values.strip(', ')
 
     def _format_sets(self, dictionary: dict) -> str:
-        # Used to format the SETs in the UPDATE statement
+        """Used to format the SETs in the UPDATE statement.
+        """
+
         set_str = ""
         for (key, value) in dictionary.items():
             set_str = f"{key} = {value}, {set_str}"
         return set_str.strip(', ')
 
     def _does_expense_exist(self, name: str):
-        # Checks to see if the expense already exists in the database
+        """Checks to see if the expense already exists in the database.
+        """
+
         does_exist = 0
         command = f"SELECT 1 FROM static_expenses WHERE name = {name}"
         self.cursor.execute(command)
@@ -39,7 +45,9 @@ class SQLConnection:
         return does_exist
 
     def _get_id(self, table: str, name: str) -> int:
-        # Gets the ID of name from table
+        """Gets the ID of name from table.
+        """
+
         command = f"SELECT {table}_id FROM {table} WHERE name = {name}"
         self.cursor.execute(command)
         (result,) = self.cursor.fetchone()
@@ -47,8 +55,10 @@ class SQLConnection:
 
     # GETTERS
     def display_expenses(self) -> dict:
-        # Gets all the active expenses and preps them for display
-        # This includes all the expenses from the static_expense table and the active loans in the loan table
+        """Gets all the active expenses and preps them for display.
+        This includes all the expenses from the static_expense table and the active loans in the loan table.
+        """
+
         command = "WITH individual_expenses AS " \
                   "(SELECT name, amount FROM expense " \
                   " UNION " \
@@ -64,7 +74,9 @@ class SQLConnection:
         return expenses
 
     def get_expenses(self) -> dict:
-        # Returns all the names of the expenses that have been entered in the database
+        """Returns all the names of the expenses that have been entered in the database.
+        """
+
         command = "SELECT expense_id, name FROM expense"
         self.cursor.execute(command)
         result = self.cursor.fetchall()
@@ -77,7 +89,9 @@ class SQLConnection:
         return{"Name": result[0], "Amount": result[1]}
 
     def get_loans(self) -> dict:
-        # Returns all the names of loans that have been entered in the database
+        """Returns all the names of loans that have been entered in the database.
+        """
+
         loans = {}
         command = "SELECT loan_id, name FROM loan"
         self.cursor.execute(command)
@@ -87,7 +101,9 @@ class SQLConnection:
         return loans
 
     def get_loan_information(self, loan_id: str) -> dict:
-        # Gets all the information about a specific loan
+        """Gets all the information about a specific loan.
+        """
+        
         columns = "name, duration_in_years, start_date, projected_payoff, due_day, descript, principle, monthly_payment_amount," \
                   f"(SELECT count(*) FROM payment GROUP BY loan_id HAVING loan_id =  {loan_id}) payments"
         command = f"SELECT {columns} FROM loan WHERE loan_id = {loan_id}"
@@ -98,8 +114,9 @@ class SQLConnection:
                 "Monthly Payment Amount": result[7], "Payments Made": result[8]}
 
     def get_payments(self, loan_id="") -> dict:
-        # Gets all the payments that have been made for a specific loan, or all of them
-        # if loan_id is not specified, and orders them by date paid in descending order
+        """Gets all the payments that have been made for a specific loan, or all of them
+        if loan_id is not specified, and orders them by date paid in descending order.
+        """
 
         where_clause = ""
         if loan_id != "":
@@ -113,7 +130,9 @@ class SQLConnection:
         return {loan_id: {loan: day} for (loan_id, loan, day) in result}
 
     def get_unpaid_loans(self) -> dict:
-        # Gets all the loans that have not been paid off for the current month
+        """Gets all the loans that have not been paid off for the current month.
+        """
+        
         command = "SELECT name, due_day " \
                   "FROM loan " \
                   "WHERE loan_id NOT IN" \
@@ -127,7 +146,9 @@ class SQLConnection:
 
     # SETTERS
     def add_expense(self, expense_info: dict):
-        # Adds an expense to the database
+        """Adds an expense to the database.
+        """
+        
         if self._does_expense_exist(expense_info["name"]):
             raise AlreadyExistsError(f"{expense_info['name']} is already a known expense\nTry updating it instead.")
 
@@ -140,7 +161,9 @@ class SQLConnection:
             print(f'An error has occurred while trying to insert into the database:\n{err}\n')
 
     def add_loan(self, loan_info: dict):
-        # Adds a loan to the database
+        """Adds a loan to the database.
+        """
+
         if self.get_loan_information(loan_info["name"]):
             raise AlreadyExistsError(f"{loan_info['name']} is already a known loan\nTry updating it instead.")
 
@@ -153,7 +176,9 @@ class SQLConnection:
             print(f'An error has occurred while trying to insert into the database:\n{err}\n')
 
     def make_payment(self, payment_info: dict):
-        # Adds a payment for a specific loan to the database
+        """Adds a payment for a specific loan to the database.
+        """
+        
         columns, values = self._dict_to_strs(payment_info)
         command = f'INSERT INTO payment ({columns}) VALUES ({values})'
         try:
@@ -164,7 +189,9 @@ class SQLConnection:
         pass
 
     def update_expense_info(self, expense: str, expense_info: dict):
-        # Updates the information of a specific expense in the database
+        """Updates the information of a specific expense in the database.
+        """
+        
         command = "UPDATE expense " \
                   f"SET {self._format_sets(expense_info)} " \
                   f"WHERE expense_id = {self._get_id('static_expenses', expense)}"
@@ -172,7 +199,9 @@ class SQLConnection:
         self.cnx.commit()
 
     def update_loan_info(self, loan: str, loan_info: dict):
-        # Updates the information of a specific loan in the database
+        """Updates the information of a specific loan in the database.
+        """
+        
         command = "UPDATE loan " \
                   f"SET {self._format_sets(loan_info)} " \
                   f"WHERE loan_id = {self._get_id('loan', loan)}"
@@ -180,6 +209,8 @@ class SQLConnection:
         self.cnx.commit()
 
     def close(self):
-        # releases the memory for the cursor and the connection to the database
+        """Releases the memory for the cursor and the connection to the database.
+        """
+        
         self.cursor.close()
         self.cnx.close()
