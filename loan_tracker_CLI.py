@@ -17,6 +17,13 @@ def _expense_menu(expenses: dict, prompt: str) -> str:
     menu_str += '\n0. Back\n------------------------\n'
     return menu_str
 
+def _loan_menu(loans: dict, prompt: str) -> str:
+    menu_str = f'--------- Loans --------\n{prompt}'
+    for (loan_id, loan) in loans.items():
+        menu_str += f'\n{loan_id}. {loan}'
+    menu_str += '\n0. Back\n------------------------\n'
+    return menu_str
+
 def _format_dict(dictionary: dict) -> str:
     dictionary_str = ""
     for (column, value) in dictionary.items():
@@ -27,16 +34,9 @@ def _format_payments(payments: dict, show_total_payments=False) -> str:
     dictionary_str = '------- Payments -------\n'
     if show_total_payments:
         dictionary_str += f'You have made {len(payments)} payments\n\n'
-    for (payment_id, payment) in payments.items():
+    for payment in payments.values():
         dictionary_str += _format_dict(payment)
     return dictionary_str + '------------------------\n'
-
-def _loan_menu(loans: dict, prompt: str) -> str:
-    menu_str = f'--------- Loans --------\n{prompt}'
-    for (loan_id, loan) in loans.items():
-        menu_str += f'\n{loan_id}. {loan}'
-    menu_str += '\n0. Back\n------------------------\n'
-    return menu_str
 
 def _parse_args() -> dict:
     parser = ArgumentParser()
@@ -62,6 +62,21 @@ def _verify(dictionary: dict) -> int:
             return 0
 
 def _verify_input(user_input: str) -> bool:
+    pass
+
+def add_loan():
+    """Adds a loan to the database.
+    """
+    pass
+
+def add_expense():
+    """Adds an expense to the database.
+    """
+    pass
+
+def edit_loan():
+    """Edits a loan in the database.
+    """
     pass
 
 def view_loans(cnx: lt.SQLConnection):
@@ -97,12 +112,12 @@ def view_expenses(cnx: lt.SQLConnection):
 def view_payments(cnx: lt.SQLConnection):
     while True:
         loans = cnx.get_loans()
-        loans['-1'] = 'All'
+        loans['All'] = 'All loan'
         user_input = input(_loan_menu(loans, 'Select the loan that you want to see the payments of:'))
 
         if user_input == '0':
             break
-        elif user_input == '-1':
+        elif user_input == 'All':
             print(_format_payments(cnx.get_payments()))
         elif user_input == "":
             continue
