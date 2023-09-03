@@ -214,7 +214,7 @@ def main(cnx: lt.SQLConnection):
 
 
 try:
-    connection = lt.SQLConnection("TJ", "Rub!kSCub3SQL")
+    connection = lt.SQLConnection("TJ", "Rub!kSCub3Sql")
     main(connection)
 except mysql.connector.errors.ProgrammingError as err:
     print('Invalid Credentials')
