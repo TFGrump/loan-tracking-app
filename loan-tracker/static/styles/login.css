@@ -1,0 +1,42 @@
+* {
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+:root {
+    --form-width: min(90vw, 350px);
+}
+
+.form {
+    margin: auto;
+    margin-top: 2dvh;
+    width: var(--form-width);
+}
+
+.form > fieldset {
+    border-radius: 5px;
+}
+
+.form-entry {
+    margin: 10px 0px 5px;
+}
+
+.form-entry > input {
+    width: calc(var(--form-width) - 12px);
+}
+
+.form-entry > button, input {
+    border: 1px solid black;
+    border-radius: 3px;
+    padding: 5px 10px;
+}
+
+.form-entry > label {
+    display: block;
+}
+
+.error-message > p {
+    color: red;
+    margin: 0px;
+    margin-top: 10px;
+    margin-left: 20px;
+}

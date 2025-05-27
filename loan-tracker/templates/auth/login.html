@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+
+<head>
+    <title>Loan Tracker Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/login.css') }}">
+</head>
+
+<body>
+    <form class="form" method="post">
+        <fieldset>
+            <legend>Account Login</legend>
+            <div class="form-entry">
+                <label for="username">Username:</label>
+                <input id="username" name="username" required />
+            </div>
+            <div class="form-entry">
+                <label for="password">Password:</label>
+                <input id="password" name="password" type="password" required />
+            </div>
+            <div class="form-entry">
+                <button>Login</button>
+            </div>
+        </fieldset>
+        <div class="error-message">
+            <p>{{ error }}</p>
+        </div>
+    </form>
+</body>
