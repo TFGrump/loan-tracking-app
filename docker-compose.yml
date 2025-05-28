@@ -3,5 +3,17 @@ services:
     container_name: loan-tracker
     build:
       dockerfile: Dockerfile
+    env_file: database/.env
     ports:
       - "5000:5000"
+    depends_on:
+      - loan-database
+  loan-database:
+    container_name: loan-database
+    image: postgres:17
+    env_file: database/.env
+    environment:
+      - PGDATA=/var/lib/postgresql/data
+      - POSTGRES_DB=loan_tracker_data
+    volumes:
+      - ./database/data:/var/lib/postgresql/data

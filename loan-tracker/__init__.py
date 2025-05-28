@@ -3,6 +3,7 @@ import os
 from flask import Flask, redirect, render_template, send_from_directory, request, url_for
 
 from .auth import login
+from .database.handler import DatabaseHandler
 
 def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
@@ -12,6 +13,7 @@ def create_app(test_config=None):
     )
 
     login_handler = login.Login()
+    database_handler = DatabaseHandler()
 
     @app.get('/login')
     def login_get(error=""):
