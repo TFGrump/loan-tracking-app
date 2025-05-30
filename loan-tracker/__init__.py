@@ -26,7 +26,12 @@ def create_app(test_config=None):
         login_handler.valid_login(username, password)
         login_handler.set_error("Wrong Username and/or Password.")
         return redirect(url_for('login_get'))
-    
+
+    @app.get('/init_db')
+    def init_db():
+        res = database_handler.init_database()
+        return f"database {'initialized' if res else 'failed to initialize'}"
+
     @app.get('/favicon.ico')
     def get_favicaon():
         return send_from_directory(os.path.join(app.root_path, 'static'),

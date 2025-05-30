@@ -1,9 +1,43 @@
 import os
+from time import sleep
 
 import psycopg
 
 class DatabaseHandler:
     def __init__(self):
+        self.is_connected_to_database = False
+        self.cur = None
+
         password = os.environ.get('POSTGRES_PASSWORD', '')
-        conn = psycopg.connect(f"host=loan-database dbname=loan_tracker_database user=postgres password={password}")
-        self.cur = conn.cursor()
+        self.conn = None
+        attempts_to_connect = 3
+        while not self.conn and attempts_to_connect > 0:
+            try:
+                self.conn = psycopg.connect(f"host=loan-database dbname=loan_tracker_data user=postgres password={password}")
+            except psycopg.OperationalError as err:
+                print(f"\tCan't connect to the database:\n{err}")
+                attempts_to_connect -= 1
+            sleep(0.1)
+
+        if self.conn:
+            self.cur = self.conn.cursor()
+            self.is_connected_to_database = True
+    
+    def _execute_command(self, command, expected_res):
+        res = self.cur.execute(command)
+        if res.statusmessage == expected_res:
+            self.conn.commit()
+            return True
+        else:
+            return False
+
+    def init_database(self):
+        if self.is_connected_to_database:
+            with open('loan-tracker/database/init.sql') as f:
+                command = f.read()
+                tables = command.split('\n\n')
+                successful_creates = 0
+                for table in tables:
+                    if self._execute_command(table, 'CREATE TABLE'):
+                        successful_creates += 1
+                return successful_creates == len(tables)
