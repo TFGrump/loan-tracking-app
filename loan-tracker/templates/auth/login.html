@@ -2,27 +2,32 @@
 
 <head>
     <title>Loan Tracker Login</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles/login.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/index.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/password_form.css') }}">
 </head>
 
 <body>
-    <form class="form" method="post">
-        <fieldset>
-            <legend>Account Login</legend>
-            <div class="form-entry">
-                <label for="username">Username:</label>
-                <input id="username" name="username" required autofocus />
+    <div class="form">
+        <form method="post">
+            <fieldset>
+                <legend>Account Login</legend>
+                <div class="form-entry">
+                    <label for="username">Username:</label>
+                    <input id="username" name="username" required autofocus />
+                </div>
+                <div class="form-entry">
+                    <label for="password">Password:</label>
+                    <input id="password" name="password" type="password" required />
+                </div>
+                <div class="form-entry auth-buttons">
+                    <button>Login</button>
+                    <a href="{{ url }}/register">Register</a>
+                </div>
+            </fieldset>
+            <div class="error-message">
+                <p>{{ error }}</p>
             </div>
-            <div class="form-entry">
-                <label for="password">Password:</label>
-                <input id="password" name="password" type="password" required />
-            </div>
-            <div class="form-entry">
-                <button>Login</button>
-            </div>
-        </fieldset>
-        <div class="error-message">
-            <p>{{ error }}</p>
-        </div>
-    </form>
+        </form>
+        <a href="{{ url }}/password_reset">Reset Password</a>
+    </div>
 </body>

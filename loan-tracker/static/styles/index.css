@@ -1,0 +1,21 @@
+* {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 1rem;
+}
+
+.login {
+    border: 1px solid black;
+    border-radius: 3px;
+    padding: 5px 10px;
+    text-decoration: none;
+    background: lightblue;
+    transition: background 0.25s;
+}
+
+.login:hover {
+    background: lawngreen;
+}
+
+.login:visited {
+    color: black;
+}
