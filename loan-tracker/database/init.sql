@@ -1,8 +1,24 @@
 CREATE TABLE IF NOT EXISTS customer(
     customer_id SERIAL PRIMARY KEY,
-    customername VARCHAR(20) NOT NULL,
-    secret_password VARCHAR(50) NOT NULL,
-    last_login TIMESTAMP
+    customername VARCHAR(30) UNIQUE,
+    secret_password CHAR(64) NOT NULL,
+    last_login TIMESTAMP,
+    email VARCHAR(50) NOT NULL,
+    phone_number VARCHAR(10),
+    first_name VARCHAR(20) NOT NULL,
+    last_name VARCHAR(20) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS customer_token(
+    token CHAR(64) PRIMARY KEY,
+    cusotmer_id INTEGER REFERENCES cusotmer (cusotmer_id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS security_question(
+    security_question_id SERIAL PRIMARY KEY,
+    question VARCHAR(50),
+    answer CHAR(64),
+    cusotmer_id INTEGER REFERENCES cusotmer (cusotmer_id)
 );
 
 CREATE TABLE IF NOT EXISTS loan(
@@ -10,9 +26,9 @@ CREATE TABLE IF NOT EXISTS loan(
     original_principal NUMERIC CHECK (original_principal > 0),
     principal NUMERIC CHECK (principal > 0),
     interest_rate NUMERIC CHECK (interest_rate > 0),
-    is_fixed_rate BOOLEAN NOT NULL,
+    is_fixed_rate BOOLEAN DEFAULT FALSE,
     years_to_pay_off SMALLINT CHECK (years_to_pay_off > 0),
-    due_date_day SMALLINT CHECK ( due_date_day > 0 AND due_date_day < 32),
+    due_date_day SMALLINT CHECK (due_date_day > 0 AND due_date_day < 32),
     due_date_month SMALLINT CHECK (due_date_month > 0 AND due_date_month < 13),
     minimum_payment NUMERIC CHECK (minimum_payment > 0),
     loan_name VARCHAR(50) NOT NULL,
@@ -54,3 +70,22 @@ CREATE TABLE IF NOT EXISTS fixed_expense_payment(
     payment_date TIMESTAMP NOT NULL,
     fixed_expense_id INTEGER REFERENCES fixed_expense (fixed_expense_id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS invoice(
+    invoice_id SERIAL PRIMARY KEY,
+    invoice_number SMALLINT NOT NULL,
+    date_sent TIMESTAMP NOT NULL,
+    due_date TIMESTAMP NOT NULL,
+    amount_due NUMERIC CHECK (amount_due > 0),
+    is_paid BOOLEAN DEFAULT FALSE,
+    customer_id INTEGER REFERENCES customer (customer_id) ON DELETE CASCADE
+)
+
+CREATE TABLE IF NOT EXISTS invoice_element(
+    invoice_element_id SERIAL PRIMARY KEY,
+    element_description VARCHAR(50) NOT NULL,
+    element_quantity SMALLINT CHECK (element_quantity > 0),
+    element_price NUMERIC CHECK (element_price > 0),
+    element_total NUMERIC DEFAULT 0,
+    invoice_id INTEGER REFERENCES invoice (invoice_id) ON DELETE CASCADE
+)
