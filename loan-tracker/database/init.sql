@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS customer(
     phone_number VARCHAR(10),
     first_name VARCHAR(20) NOT NULL,
     last_name VARCHAR(20) NOT NULL
+    remember_login BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE IF NOT EXISTS customer_token(
@@ -76,7 +77,7 @@ CREATE TABLE IF NOT EXISTS invoice(
     invoice_number SMALLINT NOT NULL,
     date_sent TIMESTAMP NOT NULL,
     due_date TIMESTAMP NOT NULL,
-    amount_due NUMERIC CHECK (amount_due > 0),
+    amount_due NUMERIC CHECK (amount_due >= 0) DEFAULT 0,
     is_paid BOOLEAN DEFAULT FALSE,
     customer_id INTEGER REFERENCES customer (customer_id) ON DELETE CASCADE
 )
