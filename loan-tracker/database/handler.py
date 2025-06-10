@@ -3,6 +3,7 @@ from time import sleep
 
 import psycopg
 
+
 class DatabaseHandler:
     def __init__(self):
         self.is_connected_to_database = False
@@ -41,3 +42,24 @@ class DatabaseHandler:
                     if self._execute_command(table, 'CREATE TABLE'):
                         successful_creates += 1
                 return successful_creates == len(tables)
+
+    def get_all(self, table):
+        command = f'SELECT * FROM %s;'
+        res = self.cur.execute(command, [table])
+        return res.fetchall()
+
+    def _filter(self, table, **where):
+        command = f'SELECT * FROM %s WHERE ' + " AND ".join(["%s = %s" for item in where.items()])
+        params = [table]
+        for key, value in where.items():
+            params.append(key)
+            params.append(value)
+
+        return self.cur.execute(command, params)
+
+    def get_filter(self, table, **where):
+        return self._filter().fetchall()
+
+    def get_one(self, table, **where):
+        return self._filter().fetchone()
+
